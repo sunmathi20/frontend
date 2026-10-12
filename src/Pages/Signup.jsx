@@ -30,7 +30,7 @@ function Signup() {
 
     try {
       await axios.post(
-        "/api/auth/signup",
+        "https://backendbinding-2-l0ng.onrender.com/api/auth/signup",
         formData
       );
 
