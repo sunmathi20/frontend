@@ -1,75 +1,90 @@
-
-import React from "react";
-import { Link, useNavigate } from "react-router-dom";
-
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+ 
 function Dashboard() {
+  const [data, setData] = useState(null);
+  const [message, setMessage] = useState("");
   const navigate = useNavigate();
-
-  let user = null;
-
-  try {
-    user = JSON.parse(localStorage.getItem("user") || "null");
-  } catch {
-    user = null;
-  }
-
+ 
+  const fetchDashboard = async () => {
+    const token = localStorage.getItem("token");
+ 
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+ 
+    try {
+      const res = await axios.get("https://backendbinding-2-l0ng.onrender.com/api/auth/dashboard", {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+ 
+      setData(res.data);
+    } catch (error) {
+      setMessage(error.response?.data?.message || "Unauthorized");
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      navigate("/login");
+    }
+  };
+ 
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     navigate("/login");
   };
-
+ 
+  useEffect(() => {
+    fetchDashboard();
+  }, []);
+ 
   return (
-    <main className="dashboard-page">
-      <header className="dashboard-header">
-        <Link to="/dashboard" className="wordmark">
-          shopcart<span>.</span>
-        </Link>
-
-        <button className="logout-button" onClick={handleLogout}>
-          Sign out <span aria-hidden="true">→</span>
-        </button>
-      </header>
-
-      <section className="dashboard-main">
-        <div className="dashboard-eyebrow">
-          <span className="status-dot" />
-          MY ACCOUNT
-        </div>
-
-        <h1>
-          Welcome{user?.name ? `, ${user.name.split(" ")[0]}` : " back"}.
-        </h1>
-
-        <p className="dashboard-subtitle">
-          Your account details.
-        </p>
-
-        <article className="dashboard-card">
-          <div className="dashboard-card-heading">PROFILE</div>
-
-          <div className="profile-content">
-            <div className="profile-avatar">
-              {(user?.name || user?.email || "U")
-                .charAt(0)
-                .toUpperCase()}
-            </div>
-
-            <div className="profile-details">
-              <h2>{user?.name || "Your account"}</h2>
-              <p>{user?.email || "Account details unavailable"}</p>
-            </div>
-
-            <span className="account-status">Signed in</span>
-          </div>
-        </article>
-
-        <button className="dashboard-logout-link" onClick={handleLogout}>
-          Sign out <span aria-hidden="true">→</span>
-        </button>
-      </section>
-    </main>
+    <div style={styles.container}>
+      <div style={styles.card}>
+        <h2>Dashboard</h2>
+ 
+        {message && <p>{message}</p>}
+ 
+        {data && (
+          <>
+            <p><strong>{data.message}</strong></p>
+            <p>User ID: {data.user.id}</p>
+            <p>Email: {data.user.email}</p>
+          </>
+        )}
+ 
+        <button onClick={handleLogout} style={styles.button}>Logout</button>
+      </div>
+    </div>
   );
 }
-
+ 
+const styles = {
+  container: {
+    display: "flex",
+    justifyContent: "center",
+    marginTop: "50px"
+  },
+  card: {
+    width: "400px",
+    padding: "25px",
+    border: "1px solid #ccc",
+    borderRadius: "10px",
+    boxShadow: "0 0 10px rgba(0,0,0,0.1)"
+  },
+  button: {
+    width: "100%",
+    padding: "10px",
+    backgroundColor: "red",
+    color: "white",
+    border: "none",
+    cursor: "pointer",
+    fontSize: "16px",
+    marginTop: "20px"
+  }
+};
+ 
 export default Dashboard;
